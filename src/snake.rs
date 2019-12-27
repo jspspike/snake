@@ -1,4 +1,5 @@
-use rand::Rng;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 #[derive(Eq, PartialEq, Copy, Clone)]
 pub enum Direction {
@@ -9,49 +10,59 @@ pub enum Direction {
     Center,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 struct Coord {
     x: u8,
     y: u8,
 }
 
-pub struct Snake {
+#[derive(Clone)]
+struct Snake {
     snake: Vec<Coord>,
     dir: Direction,
     food: Coord,
     size: u8,
+    rng: StdRng,
 }
 
 impl Snake {
-    pub fn new() -> Snake {
-        let mut rng = rand::thread_rng();
+    pub fn new(seed: u64, size: u8) -> Snake {
+        let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
 
         Snake {
-            snake: vec![Coord { x: 5, y: 4 }, Coord { x: 4, y: 4 }],
+            snake: vec![
+                Coord {
+                    x: size / 2,
+                    y: size / 2 - 1,
+                },
+                Coord {
+                    x: size / 2 - 1,
+                    y: size / 2 - 1,
+                },
+            ],
             dir: Direction::Right,
             food: Coord {
-                x: rng.gen_range(0, 10),
-                y: rng.gen_range(0, 10),
+                x: rng.gen_range(0, size),
+                y: rng.gen_range(0, size),
             },
-            size: 10,
+            size,
+            rng,
         }
+    }
+
+    pub fn length(&self) -> usize {
+        return self.snake.len();
     }
 
     fn alive(&self) -> bool {
         let mut snake = self.snake.iter();
-        let head = snake.next().unwrap().clone();
+        let head = snake.next().unwrap();
 
         if head.x >= self.size || head.y >= self.size {
             return false;
         }
 
-        for pos in snake {
-            if head == *pos {
-                return false;
-            }
-        }
-
-        true
+        snake.all(|p| head != p)
     }
 
     fn found_food(&self) -> bool {
@@ -59,7 +70,16 @@ impl Snake {
         return *head == self.food;
     }
 
+    fn gen_food(&mut self) {
+        self.food.x = self.rng.gen_range(0, self.size);
+        self.food.y = self.rng.gen_range(0, self.size);
+    }
+
     pub fn turn(&mut self, dir: Direction) -> bool {
+        if !self.alive() {
+            return false
+        }
+
         match self.dir {
             Direction::Left => {
                 if dir == Direction::Up || dir == Direction::Down {
@@ -108,8 +128,63 @@ impl Snake {
         );
         if !self.found_food() {
             self.snake.pop();
+        } else {
+            self.gen_food();
         }
 
+        dbg!(self.snake.first());
+        dbg!(self.food);
         self.alive()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_alive() {
+        let mut test = Snake::new(0, 10);
+        assert!(test.alive());
+        test.snake = vec![Coord { x: 4, y: 10 }];
+        assert!(!test.alive());
+        test.snake = vec![
+            Coord { x: 5, y: 4 },
+            Coord { x: 4, y: 4 },
+            Coord { x: 4, y: 3 },
+            Coord { x: 5, y: 3 },
+            Coord { x: 5, y: 4 },
+        ];
+        assert!(!test.alive());
+    }
+
+    #[test]
+    fn test_found_food() {
+        let mut test = Snake::new(0, 10);
+        assert!(!test.found_food());
+        test.snake = vec![Coord { x: 5, y: 0 }];
+        assert!(test.found_food());
+    }
+
+    #[test]
+    fn test_snake() {
+        let mut test = Snake::new(0, 10);
+        assert!(test.turn(Direction::Up));
+        assert!(test.turn(Direction::Center));
+        assert!(test.turn(Direction::Center));
+        assert!(test.turn(Direction::Center));
+        assert_eq!(test.length(), 3);
+        assert!(test.turn(Direction::Left));
+        assert!(test.turn(Direction::Down));
+        assert!(test.turn(Direction::Center));
+        assert!(test.turn(Direction::Center));
+        assert!(test.turn(Direction::Center));
+        assert!(test.turn(Direction::Center));
+        assert!(test.turn(Direction::Center));
+        assert!(test.turn(Direction::Center));
+        assert!(test.turn(Direction::Center));
+        assert!(test.turn(Direction::Center));
+        assert_eq!(test.length(), 4);
     }
 }
