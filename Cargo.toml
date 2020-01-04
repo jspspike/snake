@@ -5,3 +5,8 @@ name = "snake"
 version = "0.1.0"
 [dependencies]
 rand = "0.7.2"
+criterion = "0.3.0"
+
+[[bench]]
+name = "snake"
+harness = false

@@ -17,7 +17,7 @@ struct Coord {
 }
 
 #[derive(Clone)]
-struct Snake {
+pub struct Snake {
     snake: Vec<Coord>,
     dir: Direction,
     food: Coord,
@@ -132,8 +132,8 @@ impl Snake {
             self.gen_food();
         }
 
-        dbg!(self.snake.first());
-        dbg!(self.food);
+        /*dbg!(self.snake.first());
+        dbg!(self.food);*/
         self.alive()
     }
 }
