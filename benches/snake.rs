@@ -5,9 +5,20 @@ use criterion::Criterion;
 use criterion::black_box;
 use snake::snake::{Snake, Direction};
 
-fn bench_snake(c: &mut Criterion) {
+fn play_game() {
     let mut test = Snake::new(black_box(20), 10);
-    c.bench_function("snake 20", |b| b.iter(|| test.turn(Direction::Center))); 
+    for _ in 0..9 {
+        test.turn(Direction::Right);
+    }
+    test.turn(Direction::Down);
+    for _ in 0..9 {
+        test.turn(Direction::Left);     
+    }
+    test.turn(Direction::Up);
+}
+
+fn bench_snake(c: &mut Criterion) {
+    c.bench_function("snake 20", |b| b.iter(|| play_game())); 
 }
 
 criterion_group!(benches, bench_snake);

@@ -132,8 +132,6 @@ impl Snake {
             self.gen_food();
         }
 
-        /*dbg!(self.snake.first());
-        dbg!(self.food);*/
         self.alive()
     }
 }
