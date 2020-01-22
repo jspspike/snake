@@ -28,18 +28,30 @@ pub struct Snake {
 impl Snake {
     pub fn new(seed: u64, size: u8) -> Snake {
         let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
+        let snake = vec![
+            Coord {
+                x: size / 2,
+                y: size / 2 - 1,
+            },
+            Coord {
+                x: size / 2 - 1,
+                y: size / 2 - 1,
+            },
+        ];
+
+        loop {
+            let food = Coord {
+                x: rng.gen_range(0, size),
+                y: rng.gen_range(0, size),
+            };
+
+            if snake.iter().all(|p| food != *p) {
+                break;
+            }
+        }
 
         Snake {
-            snake: vec![
-                Coord {
-                    x: size / 2,
-                    y: size / 2 - 1,
-                },
-                Coord {
-                    x: size / 2 - 1,
-                    y: size / 2 - 1,
-                },
-            ],
+            snake,
             dir: Direction::Right,
             food: Coord {
                 x: rng.gen_range(0, size),
@@ -71,13 +83,23 @@ impl Snake {
     }
 
     fn gen_food(&mut self) {
-        self.food.x = self.rng.gen_range(0, self.size);
-        self.food.y = self.rng.gen_range(0, self.size);
+        loop {
+            let food = Coord {
+                x: self.rng.gen_range(0, self.size),
+                y: self.rng.gen_range(0, self.size),
+            };
+            let snake = &self.snake;
+
+            if snake.iter().all(|p| food != *p) {
+                self.food = food;
+                break;
+            }
+        }
     }
 
     pub fn turn(&mut self, dir: Direction) -> bool {
         if !self.alive() {
-            return false
+            return false;
         }
 
         match self.dir {
@@ -161,27 +183,24 @@ mod tests {
     fn test_found_food() {
         let mut test = Snake::new(0, 10);
         assert!(!test.found_food());
-        test.snake = vec![Coord { x: 5, y: 0 }];
+        test.snake = vec![Coord { x: 4, y: 9 }];
         assert!(test.found_food());
     }
 
     #[test]
     fn test_snake() {
         let mut test = Snake::new(0, 10);
-        assert!(test.turn(Direction::Up));
-        assert!(test.turn(Direction::Center));
-        assert!(test.turn(Direction::Center));
-        assert!(test.turn(Direction::Center));
-        assert_eq!(test.length(), 3);
-        assert!(test.turn(Direction::Left));
         assert!(test.turn(Direction::Down));
-        assert!(test.turn(Direction::Center));
-        assert!(test.turn(Direction::Center));
-        assert!(test.turn(Direction::Center));
-        assert!(test.turn(Direction::Center));
-        assert!(test.turn(Direction::Center));
-        assert!(test.turn(Direction::Center));
-        assert!(test.turn(Direction::Center));
+        for _ in 0..4 {
+            assert!(test.turn(Direction::Center));
+        }
+        assert!(test.turn(Direction::Left));
+        assert_eq!(test.length(), 3);
+
+        for _ in 0..4 {
+            assert!(test.turn(Direction::Center));
+        }
+        assert!(test.turn(Direction::Up));
         assert!(test.turn(Direction::Center));
         assert_eq!(test.length(), 4);
     }
