@@ -6,7 +6,7 @@ version = "0.1.0"
 
 [dependencies]
 rand = "0.7.2"
-quicksilver = "0.3.22"
+sfml = "0.15.1"
 
 [dev-dependencies]
 criterion = "0.3.0"

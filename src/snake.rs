@@ -1,6 +1,10 @@
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
+use sfml::graphics::Color;
+pub use sfml::graphics::RenderWindow;
+pub use sfml::window::Style;
+
 #[derive(Eq, PartialEq, Copy, Clone)]
 pub enum Direction {
     Up,
@@ -11,23 +15,26 @@ pub enum Direction {
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-struct Coord {
-    x: u8,
-    y: u8,
+pub(super) struct Coord {
+    pub(super) x: u8,
+    pub(super) y: u8,
 }
 
-#[derive(Clone)]
 pub struct Snake {
-    snake: Vec<Coord>,
+    pub(super) snake: Vec<Coord>,
     dir: Direction,
     food: Coord,
-    size: u8,
+    pub(super) size: u8,
     rng: StdRng,
+    pub(super) display: Option<RenderWindow>,
 }
 
 impl Snake {
     pub fn new(seed: u64, size: u8) -> Snake {
-        let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
+        Snake::new_display(seed, size, None)
+    }
+
+    pub fn new_display(seed: u64, size: u8, display: Option<RenderWindow>) -> Snake {
         let snake = vec![
             Coord {
                 x: size / 2,
@@ -39,31 +46,23 @@ impl Snake {
             },
         ];
 
-        loop {
-            let food = Coord {
-                x: rng.gen_range(0, size),
-                y: rng.gen_range(0, size),
-            };
-
-            if snake.iter().all(|p| food != *p) {
-                break;
-            }
-        }
-
-        Snake {
+        let mut s = Snake {
             snake,
             dir: Direction::Right,
-            food: Coord {
-                x: rng.gen_range(0, size),
-                y: rng.gen_range(0, size),
-            },
+            food: Coord { x: 0, y: 0 },
             size,
-            rng,
-        }
+            rng: SeedableRng::seed_from_u64(seed),
+            display,
+        };
+
+        s.init_display();
+        s.gen_food();
+        s.display();
+        s
     }
 
     pub fn length(&self) -> usize {
-        return self.snake.len();
+        self.snake.len()
     }
 
     fn alive(&self) -> bool {
@@ -95,13 +94,10 @@ impl Snake {
                 break;
             }
         }
+        self.draw_square(self.food, Color::GREEN);
     }
 
     pub fn turn(&mut self, dir: Direction) -> bool {
-        if !self.alive() {
-            return false;
-        }
-
         match self.dir {
             Direction::Left => {
                 if dir == Direction::Up || dir == Direction::Down {
@@ -126,34 +122,62 @@ impl Snake {
             Direction::Center => panic!("Direction can't be center"),
         }
 
+        let curr_pos = *self.snake.first().unwrap();
+
         self.snake.insert(
             0,
             match self.dir {
-                Direction::Left => Coord {
-                    x: self.snake.first().unwrap().x - 1,
-                    y: self.snake.first().unwrap().y,
-                },
-                Direction::Right => Coord {
-                    x: self.snake.first().unwrap().x + 1,
-                    y: self.snake.first().unwrap().y,
-                },
-                Direction::Up => Coord {
-                    x: self.snake.first().unwrap().x,
-                    y: self.snake.first().unwrap().y - 1,
-                },
-                Direction::Down => Coord {
-                    x: self.snake.first().unwrap().x,
-                    y: self.snake.first().unwrap().y + 1,
-                },
+                Direction::Left => {
+                    if curr_pos.x == 0 {
+                        return false;
+                    }
+
+                    Coord {
+                        x: curr_pos.x - 1,
+                        y: curr_pos.y,
+                    }
+                }
+                Direction::Right => {
+                    if curr_pos.x == self.size - 1 {
+                        return false;
+                    }
+
+                    Coord {
+                        x: curr_pos.x + 1,
+                        y: curr_pos.y,
+                    }
+                }
+                Direction::Up => {
+                    if curr_pos.y == 0 {
+                        return false;
+                    }
+
+                    Coord {
+                        x: curr_pos.x,
+                        y: curr_pos.y - 1,
+                    }
+                }
+                Direction::Down => {
+                    if curr_pos.y == self.size - 1 {
+                        return false;
+                    }
+
+                    Coord {
+                        x: curr_pos.x,
+                        y: curr_pos.y + 1,
+                    }
+                }
                 Direction::Center => panic!("Direction can't be center"),
             },
         );
         if !self.found_food() {
-            self.snake.pop();
+            let tail = self.snake.pop();
+            self.draw_square(tail.unwrap(), Color::BLACK);
         } else {
             self.gen_food();
         }
 
+        self.display();
         self.alive()
     }
 }
@@ -183,25 +207,24 @@ mod tests {
     fn test_found_food() {
         let mut test = Snake::new(0, 10);
         assert!(!test.found_food());
-        test.snake = vec![Coord { x: 4, y: 9 }];
+        test.snake = vec![Coord { x: 5, y: 0 }];
         assert!(test.found_food());
     }
 
     #[test]
     fn test_snake() {
         let mut test = Snake::new(0, 10);
-        assert!(test.turn(Direction::Down));
-        for _ in 0..4 {
+        assert!(test.turn(Direction::Up));
+        for _ in 0..3 {
             assert!(test.turn(Direction::Center));
         }
-        assert!(test.turn(Direction::Left));
         assert_eq!(test.length(), 3);
 
-        for _ in 0..4 {
+        assert!(test.turn(Direction::Left));
+        assert!(test.turn(Direction::Down));
+        for _ in 0..8 {
             assert!(test.turn(Direction::Center));
         }
-        assert!(test.turn(Direction::Up));
-        assert!(test.turn(Direction::Center));
         assert_eq!(test.length(), 4);
     }
 }
