@@ -5,7 +5,7 @@ use sfml::graphics::Color;
 pub use sfml::graphics::RenderWindow;
 pub use sfml::window::Style;
 
-#[derive(Eq, PartialEq, Copy, Clone)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Direction {
     Up,
     Down,
@@ -176,6 +176,9 @@ impl Snake {
         } else {
             self.gen_food();
         }
+
+        let head = *self.snake.first().unwrap();
+        self.draw_square(head, Color::WHITE);
 
         self.display();
         self.alive()
