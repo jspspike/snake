@@ -6,7 +6,7 @@ use std::{thread, time};
 fn main() {
     let window = RenderWindow::new((1000, 1000), "Snake", Style::CLOSE, &Default::default());
 
-    let mut game = Snake::new_display(0, 10, Some(window));
+    let mut game = Snake::new_display(0, 15, Some(window));
     let direction = Arc::new(Mutex::new(Direction::Center));
     let dir = direction.clone();
 
