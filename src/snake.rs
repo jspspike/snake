@@ -115,6 +115,11 @@ impl Snake {
         self.snake.len()
     }
 
+    /// Returns current direction of snake
+    pub fn current_direction(&self) -> Direction {
+        return self.dir;
+    }
+
     /// Returns true or false whether snake is alive or dead
     /// ie. whether game is continuing or over
     fn alive(&self) -> bool {
