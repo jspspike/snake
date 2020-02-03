@@ -2,7 +2,7 @@
 
 A simple library to play the classic game snake. Mostly a way for me to learn rust.
 
-![game](exmaples/snake.gif)
+![game](examples/snake.gif)
 
 
 ## Installation
