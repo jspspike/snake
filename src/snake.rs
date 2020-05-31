@@ -293,6 +293,7 @@ mod tests {
     #[test]
     fn test_alive() {
         let mut test = Snake::new(0, 10);
+        test.snake.insert(0, Coord { x: 6, y: 4 });
         assert!(test.alive());
         test.snake = vec![Coord { x: 4, y: 10 }];
         assert!(!test.alive());
@@ -310,7 +311,7 @@ mod tests {
     fn test_found_food() {
         let mut test = Snake::new(0, 10);
         assert!(!test.found_food());
-        test.snake = vec![Coord { x: 5, y: 0 }];
+        test.snake = vec![Coord { x: 0, y: 2 }];
         assert!(test.found_food());
     }
 
@@ -318,13 +319,20 @@ mod tests {
     fn test_snake() {
         let mut test = Snake::new(0, 10);
         assert!(test.turn(Direction::Up));
-        for _ in 0..3 {
+        assert!(test.turn(Direction::Center));
+
+        assert!(test.turn(Direction::Left));
+        for _ in 0..4 {
             assert!(test.turn(Direction::Center));
         }
         assert_eq!(test.length(), 3);
 
-        assert!(test.turn(Direction::Left));
         assert!(test.turn(Direction::Down));
+        for _ in 0..2 {
+            assert!(test.turn(Direction::Center));
+        }
+
+        assert!(test.turn(Direction::Right));
         for _ in 0..8 {
             assert!(test.turn(Direction::Center));
         }
