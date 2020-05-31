@@ -15,6 +15,8 @@
 //! let mut game = Snake::new_display(0, 15, Some(window));
 //! ```
 
+use indexmap::IndexSet;
+
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
@@ -33,7 +35,7 @@ pub enum Direction {
 }
 
 /// Coordinate to show position on board
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
 pub(super) struct Coord {
     pub(super) x: u8,
     pub(super) y: u8,
@@ -42,6 +44,7 @@ pub(super) struct Coord {
 /// Instance of game Snake containing board state, rng, and display
 pub struct Snake {
     pub(super) snake: Vec<Coord>,
+    empty: IndexSet<Coord>,
     dir: Direction,
     food: Coord,
     pub(super) size: u8,
@@ -84,19 +87,31 @@ impl Snake {
     /// let mut game = Snake::new_display(0, 15, Some(window));
     /// ```
     pub fn new_display(seed: u64, size: u8, display: Option<RenderWindow>) -> Snake {
-        let snake = vec![
-            Coord {
-                x: size / 2,
-                y: size / 2 - 1,
-            },
-            Coord {
-                x: size / 2 - 1,
-                y: size / 2 - 1,
-            },
-        ];
+        let snake_first = Coord {
+            x: size / 2,
+            y: size / 2 - 1,
+        };
+        let snake_second = Coord {
+            x: size / 2 - 1,
+            y: size / 2 - 1,
+        };
+
+        let snake = vec![snake_first, snake_second];
+
+        let mut empty = IndexSet::new();
+
+        for x in 0..size {
+            for y in 0..size {
+                empty.insert(Coord { x, y });
+            }
+        }
+
+        empty.remove(&snake_first);
+        empty.remove(&snake_second);
 
         let mut s = Snake {
             snake,
+            empty,
             dir: Direction::Right,
             food: Coord { x: 0, y: 0 },
             size,
@@ -130,7 +145,7 @@ impl Snake {
             return false;
         }
 
-        snake.all(|p| head != p)
+        self.empty.contains(head)
     }
 
     /// Returns true if head is on food
@@ -140,20 +155,19 @@ impl Snake {
     }
 
     /// Spawns food at random open place on board
-    fn gen_food(&mut self) {
-        loop {
-            let food = Coord {
-                x: self.rng.gen_range(0, self.size),
-                y: self.rng.gen_range(0, self.size),
-            };
-            let snake = &self.snake;
-
-            if snake.iter().all(|p| food != *p) {
-                self.food = food;
-                break;
-            }
+    fn gen_food(&mut self) -> bool {
+        if self.empty.len() == 0 {
+            return false;
         }
+
+        self.food = *self
+            .empty
+            .get_index(self.rng.gen_range(0, self.empty.len()))
+            .unwrap();
+
         self.draw_square(self.food, Color::GREEN);
+
+        true
     }
 
     /// Elapses game one move. Returns true if game is still active and false if game is over (once
@@ -191,64 +205,74 @@ impl Snake {
 
         let curr_pos = *self.snake.first().unwrap();
 
-        self.snake.insert(
-            0,
-            match self.dir {
-                Direction::Left => {
-                    if curr_pos.x == 0 {
-                        return false;
-                    }
-
-                    Coord {
-                        x: curr_pos.x - 1,
-                        y: curr_pos.y,
-                    }
+        let new_head = match self.dir {
+            Direction::Left => {
+                if curr_pos.x == 0 {
+                    return false;
                 }
-                Direction::Right => {
-                    if curr_pos.x == self.size - 1 {
-                        return false;
-                    }
 
-                    Coord {
-                        x: curr_pos.x + 1,
-                        y: curr_pos.y,
-                    }
+                Coord {
+                    x: curr_pos.x - 1,
+                    y: curr_pos.y,
                 }
-                Direction::Up => {
-                    if curr_pos.y == 0 {
-                        return false;
-                    }
+            }
+            Direction::Right => {
+                if curr_pos.x == self.size - 1 {
+                    return false;
+                }
 
-                    Coord {
-                        x: curr_pos.x,
-                        y: curr_pos.y - 1,
-                    }
+                Coord {
+                    x: curr_pos.x + 1,
+                    y: curr_pos.y,
                 }
-                Direction::Down => {
-                    if curr_pos.y == self.size - 1 {
-                        return false;
-                    }
+            }
+            Direction::Up => {
+                if curr_pos.y == 0 {
+                    return false;
+                }
 
-                    Coord {
-                        x: curr_pos.x,
-                        y: curr_pos.y + 1,
-                    }
+                Coord {
+                    x: curr_pos.x,
+                    y: curr_pos.y - 1,
                 }
-                Direction::Center => panic!("Direction can't be center"),
-            },
-        );
+            }
+            Direction::Down => {
+                if curr_pos.y == self.size - 1 {
+                    return false;
+                }
+
+                Coord {
+                    x: curr_pos.x,
+                    y: curr_pos.y + 1,
+                }
+            }
+            Direction::Center => panic!("Direction can't be center"),
+        };
+
+        self.snake.insert(0, new_head);
+
+        if !self.alive() {
+            return false;
+        }
+
+        self.empty.remove(&new_head);
+
         if !self.found_food() {
-            let tail = self.snake.pop();
-            self.draw_square(tail.unwrap(), Color::BLACK);
+            let tail = self.snake.pop().unwrap();
+            self.empty.insert(tail);
+            self.draw_square(tail, Color::BLACK);
         } else {
-            self.gen_food();
+            if !self.gen_food() {
+                return false;
+            }
         }
 
         let head = *self.snake.first().unwrap();
         self.draw_square(head, Color::WHITE);
 
         self.display();
-        self.alive()
+
+        true
     }
 }
 
