@@ -41,6 +41,12 @@ pub(super) struct Coord {
     pub(super) y: u8,
 }
 
+impl Coord {
+    pub fn in_bounds(&self, size: u8) -> bool {
+        self.x < size && self.y < size
+    }
+}
+
 /// Instance of game Snake containing board state, rng, and display
 pub struct Snake {
     pub(super) snake: Vec<Coord>,
@@ -135,13 +141,60 @@ impl Snake {
         return self.dir;
     }
 
+    /// Returns distance of head from walls in the following order
+    /// left, up, right, down
+    pub fn walls(&self) -> Vec<f32> {
+        let mut walls = Vec::with_capacity(4);
+
+        let head = self.snake.first().unwrap();
+
+        walls.push(head.x as f32);
+        walls.push(head.y as f32);
+        walls.push((self.size - head.x) as f32);
+        walls.push((self.size - head.y) as f32);
+
+        walls
+    }
+
+
+
+    /// Returns distance of head from snake in each direction in the following order
+    /// left, up-left, right, up-right, down-right, down, down-left
+    pub fn snake(&self) -> Vec<f32> {
+        let mut snake = Vec::with_capacity(8);
+        for _ in 0..8 {
+            snake.push(self.size as f32);
+        }
+
+        let head = self.snake.first().unwrap();
+
+        let mut c = *head;
+        
+        while c.in_bounds(self.size) {
+            c.x -= 1;
+            if !self.empty.contains(&c) {
+                snake[0] = c.x as f32;
+                break;
+            }
+        }
+
+        for x in (0..head.x).rev() {
+            if !self.empty.contains(&Coord{x, y: head.y }) {
+                snake[0] = x as f32;
+                break;
+            }
+        };
+
+        snake
+    }
+
     /// Returns true or false whether snake is alive or dead
     /// ie. whether game is continuing or over
     fn alive(&self) -> bool {
         let mut snake = self.snake.iter();
         let head = snake.next().unwrap();
 
-        if head.x >= self.size || head.y >= self.size {
+        if !head.in_bounds(self.size) {
             return false;
         }
 
