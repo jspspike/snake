@@ -24,5 +24,5 @@ Clone the repository and then run the example `game`.
 ```
 git clone https://github.com/jspspike/snake
 cd snake
-cargo run --example game
+cargo run --example game --features display
 ```

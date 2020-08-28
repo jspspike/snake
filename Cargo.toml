@@ -6,11 +6,18 @@ version = "0.1.0"
 
 [dependencies]
 rand = "0.7.2"
-sfml = "0.15.1"
+sfml = { version = "0.15.1", optional = true }
 indexmap = "1.3.2"
 
 [dev-dependencies]
 criterion = "0.3.0"
+
+[features]
+display = ["sfml"]
+
+[[example]]
+name = "game"
+required-features = ["display"]
 
 [[bench]]
 name = "snake"

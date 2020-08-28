@@ -9,7 +9,7 @@
 //! ```
 //!
 //! Game with display
-//! ```
+//! ```ignore
 //! use snake::{Direction, RenderWindow, Snake, Style};
 //! let window = RenderWindow::new((1000, 1000), "Snake", Style::CLOSE, &Default::default());
 //! let mut game = Snake::new_display(0, 15, Some(window));
@@ -24,10 +24,10 @@ use crate::coord::{Coord, Direction};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
+#[cfg(feature = "display")]
 use sfml::graphics::Color;
-pub use sfml::graphics::RenderWindow;
-pub use sfml::window::Style;
-
+#[cfg(feature = "display")]
+pub use {sfml::graphics::RenderWindow, sfml::window::Style};
 
 /// Instance of game Snake containing board state, rng, and display
 pub struct Snake {
@@ -37,6 +37,7 @@ pub struct Snake {
     food: Coord,
     pub(super) size: u8,
     rng: StdRng,
+    #[cfg(feature = "display")]
     pub(super) display: Option<RenderWindow>,
 }
 
@@ -55,26 +56,6 @@ impl Snake {
     /// let mut game = Snake::new(0, 10);
     /// ```
     pub fn new(seed: u64, size: u8) -> Snake {
-        Snake::new_display(seed, size, None)
-    }
-
-    /// Creates a game instance
-    ///
-    /// # Arguments
-    ///
-    /// * `seed` - Seed for random generation of food
-    /// * `size` - The width/height of game board grid
-    /// * `display` - Window to display game on, provide `None` for no display
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use snake::{Direction, RenderWindow, Snake, Style};
-    ///
-    /// let window = RenderWindow::new((1000, 1000), "Snake", Style::CLOSE, &Default::default());
-    /// let mut game = Snake::new_display(0, 15, Some(window));
-    /// ```
-    pub fn new_display(seed: u64, size: u8, display: Option<RenderWindow>) -> Snake {
         let snake_first = Coord {
             x: size / 2,
             y: size / 2 - 1,
@@ -97,15 +78,38 @@ impl Snake {
         empty.remove(&snake_first);
         empty.remove(&snake_second);
 
-        let mut s = Snake {
+        Snake {
             snake,
             empty,
             dir: Direction::Right,
             food: Coord { x: 0, y: 0 },
             size,
             rng: SeedableRng::seed_from_u64(seed),
-            display,
-        };
+            #[cfg(feature = "display")]
+            display: None,
+        }
+    }
+
+    /// Creates a game instance
+    ///
+    /// # Arguments
+    ///
+    /// * `seed` - Seed for random generation of food
+    /// * `size` - The width/height of game board grid
+    /// * `display` - Window to display game on, provide `None` for no display
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use snake::{Direction, RenderWindow, Snake, Style};
+    ///
+    /// let window = RenderWindow::new((1000, 1000), "Snake", Style::CLOSE, &Default::default());
+    /// let mut game = Snake::new_display(0, 15, Some(window));
+    /// ```
+    #[cfg(feature = "display")]
+    pub fn new_display(seed: u64, size: u8, display: Option<RenderWindow>) -> Snake {
+        let mut s = Snake::new(seed, size);
+        s.display = display;
 
         s.init_display();
         s.gen_food();
@@ -251,6 +255,7 @@ impl Snake {
             .get_index(self.rng.gen_range(0, self.empty.len()))
             .unwrap();
 
+        #[cfg(feature = "display")]
         self.draw_square(self.food, Color::GREEN);
 
         true
@@ -334,21 +339,26 @@ impl Snake {
         if !self.found_food() {
             let tail = self.snake.pop().unwrap();
             self.empty.insert(tail);
+            #[cfg(feature = "display")]
             self.draw_square(tail, Color::BLACK);
         } else if !self.gen_food() {
             return false;
         }
 
-        let head = *self.snake.first().unwrap();
-        self.draw_square(head, Color::WHITE);
+        #[cfg(feature = "display")]
+        {
+            let head = *self.snake.first().unwrap();
+            self.draw_square(head, Color::WHITE);
 
-        self.display();
+            self.display();
+        }
 
         true
     }
 }
 
 // TODO Probably need to do more to close out display
+#[cfg(feature = "display")]
 impl Drop for Snake {
     fn drop(&mut self) {
         if let Some(d) = self.display.as_mut() {
@@ -382,6 +392,7 @@ mod tests {
     #[test]
     fn test_found_food() {
         let mut test = Snake::new(0, 10);
+        test.food = Coord { x: 0, y: 2 };
         assert!(!test.found_food());
         test.snake = vec![Coord { x: 0, y: 2 }];
         assert!(test.found_food());
@@ -390,6 +401,7 @@ mod tests {
     #[test]
     fn test_snake() {
         let mut test = Snake::new(0, 10);
+        test.food = Coord { x: 0, y: 2 };
         assert!(test.turn(Direction::Up));
         assert!(test.turn(Direction::Center));
 
@@ -398,6 +410,7 @@ mod tests {
             assert!(test.turn(Direction::Center));
         }
         assert_eq!(test.length(), 3);
+        test.food = Coord { x: 9, y: 5 };
 
         assert!(test.turn(Direction::Down));
         for _ in 0..2 {
