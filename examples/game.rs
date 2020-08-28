@@ -1,5 +1,5 @@
 use sfml::window::Key;
-use snake::snake::{Direction, RenderWindow, Snake, Style};
+use snake::{Direction, RenderWindow, Snake, Style};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 
