@@ -1,8 +1,17 @@
 [package]
 authors = ["jspspike <jspspike@gmail.com>"]
 edition = "2018"
-name = "snake"
+name = "snake-rs"
 version = "0.1.0"
+description = "A library to handle the logic for the classic game snake"
+license-file = "LICENSE"
+repository = "https://github.com/jspspike/snake"
+keywords = ["game", "snake", "api"]
+categories = ["command-line-utilities", "game-engines", "games"]
+
+[lib]
+path = "src/lib.rs"
+name = "snake"
 
 [dependencies]
 rand = "0.7.2"
