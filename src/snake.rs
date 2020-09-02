@@ -78,7 +78,7 @@ impl Snake {
         empty.remove(&snake_first);
         empty.remove(&snake_second);
 
-        Snake {
+        let mut s = Snake {
             snake,
             empty,
             dir: Direction::Right,
@@ -87,7 +87,10 @@ impl Snake {
             rng: SeedableRng::seed_from_u64(seed),
             #[cfg(feature = "display")]
             display: None,
-        }
+        };
+
+        s.gen_food();
+        s
     }
 
     /// Creates a game instance
@@ -112,7 +115,7 @@ impl Snake {
         s.display = display;
 
         s.init_display();
-        s.gen_food();
+        s.draw_square(s.food, Color::GREEN);
         s.display();
         s
     }
