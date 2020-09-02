@@ -1,25 +1,9 @@
-//! # Quick Start
-//!
-//! Game without display
-//! ```
-//! use snake::{Snake, Direction};
-//! let mut game = Snake::new(0, 10);
-//!
-//! game.turn(Direction::Down);
-//! ```
-//!
-//! Game with display
-//! ```ignore
-//! use snake::{Direction, RenderWindow, Snake, Style};
-//! let window = RenderWindow::new((1000, 1000), "Snake", Style::CLOSE, &Default::default());
-//! let mut game = Snake::new_display(0, 15, Some(window));
-//! ```
-
 use std::cmp::min;
 
 use indexmap::IndexSet;
 
-use crate::coord::{Coord, Direction};
+use crate::coord::Coord;
+pub use crate::coord::Direction;
 
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
@@ -52,7 +36,7 @@ impl Snake {
     /// # Example
     ///
     /// ```
-    /// use snake::snake::Snake;
+    /// use snake::Snake;
     /// let mut game = Snake::new(0, 10);
     /// ```
     pub fn new(seed: u64, size: u8) -> Snake {

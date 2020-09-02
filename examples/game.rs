@@ -10,6 +10,7 @@ fn main() {
     let direction = Arc::new(Mutex::new(Direction::Center));
     let dir = direction.clone();
 
+    // Thread to handle user input
     thread::spawn(move || loop {
         let mut dir = dir.lock().unwrap();
         *dir = if Key::Up.is_pressed() {
