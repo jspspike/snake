@@ -1,3 +1,6 @@
+[![Documentation](https://docs.rs/snake-rs/badge.svg)](https://docs.rs/snake-rs)
+[![Crates](https://img.shields.io/crates/v/snake-rs.svg)](https://crates.io/crates/snake-rs)
+
 # snake
 
 A library to handle the logic for the classic game snake.
@@ -6,8 +9,12 @@ A library to handle the logic for the classic game snake.
 
 ## Usage
 
-Initialize with `new` and use `turn` to progress a game step. An example on how to use it in
-[game.rs](examples/game.rs).
+```toml
+[dependencies]
+snake-rs = "0.1.1"
+```
+
+Initialize with `new` and use `turn` to progress a game step. An example is in [game.rs](examples/game.rs).
 
 Game without display
 ```rust

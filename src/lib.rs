@@ -1,7 +1,6 @@
 //! # Quick Start
 //!
-//! Initialize with `new` and use `turn` to progress a game step. An example on how to use it in
-//! [game.rs](https://github.com/jspspike/snake/blob/master/examples/game.rs).
+//! Initialize with `new` and use `turn` to progress a game step. An example is in [game.rs](https://github.com/jspspike/snake/blob/master/examples/game.rs).
 //!
 //! Game without display
 //! ```

@@ -2,8 +2,9 @@
 authors = ["jspspike <jspspike@gmail.com>"]
 edition = "2018"
 name = "snake-rs"
-version = "0.1.0"
+version = "0.1.1"
 description = "A library to handle the logic for the classic game snake"
+readme = "README.md"
 license-file = "LICENSE"
 repository = "https://github.com/jspspike/snake"
 keywords = ["game", "snake", "api"]
