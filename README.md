@@ -1,5 +1,5 @@
-[![Documentation](https://docs.rs/snake-rs/badge.svg)](https://docs.rs/snake-rs)
-[![Crates](https://img.shields.io/crates/v/snake-rs.svg)](https://crates.io/crates/snake-rs)
+[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg?style=for-the-badge&logo)](https://docs.rs/snake-rs)
+[![Crates](https://img.shields.io/crates/v/snake-rs.svg?style=for-the-badge)](https://crates.io/crates/snake-rs)
 
 # snake
 
